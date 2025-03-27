@@ -2,24 +2,27 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
 
   // Auth state changes stream
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-   
-    // Sign Up with Email and Password
-   Future<User?> signUp({
+
+  // Sign Up with Email and Password
+  Future<User?> signUp({
     required String email,
     required String password,
   }) async {
     try {
-      print('AuthService: Attempting to create user'); // Debug print
+      print('AuthService: Attempting to create user');
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -31,6 +34,7 @@ class AuthService {
       rethrow; // Rethrow the error to be caught in the UI
     }
   }
+
   // Sign in with email and password
   Future<UserCredential> signInWithEmailAndPassword(
       String email, String password) async {
@@ -100,7 +104,8 @@ class AuthService {
   }
 
   // Update user profile
-  Future<void> updateUserProfile({String? displayName, String? photoURL}) async {
+  Future<void> updateUserProfile(
+      {String? displayName, String? photoURL}) async {
     try {
       await _auth.currentUser?.updateDisplayName(displayName);
       await _auth.currentUser?.updatePhotoURL(photoURL);
@@ -108,6 +113,25 @@ class AuthService {
       throw _handleAuthException(e);
     }
   }
+
+Future<UserModel?> getUserData() async {
+  final user = _auth.currentUser;
+  if (user != null) {
+    try {
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        return UserModel.fromJson(userDoc.data()!);
+      } else {
+        print("User document does not exist in Firestore.");
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
+  } else {
+    print("No authenticated user found.");
+  }
+  return null;
+}
 
   // Handle Firebase Auth exceptions
   Exception _handleAuthException(FirebaseAuthException e) {

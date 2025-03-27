@@ -2,6 +2,8 @@
 
 import 'package:shopngo/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'categories_screen.dart';
+import 'profile_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -58,7 +60,8 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.person),
             onPressed: () {
               // Navigate to the profile screen
-              print('Profile button pressed');
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const ProfileScreen()));
             },
           ),
         ],
