@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "20251967698",
+    "project_id": "shopngo-app",
+    "storage_bucket": "shopngo-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:20251967698:android:63b4db60c843dc4625ed0b",
+        "android_client_info": {
+          "package_name": "com.example.shopngo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5jEBTbLeedcoE19E9m-fcLf6rjs7O9b8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
