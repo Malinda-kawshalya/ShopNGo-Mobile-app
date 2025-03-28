@@ -1,76 +1,68 @@
-// lib/services/auth_service.dart
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shopngo/models/user_model.dart';
+import 'package:flutter/material.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<UserCredential?> signUpWithEmailAndPassword(
-      String email, String password, UserRole role) async {
+  // Sign Up Method
+  Future<String?> signUp({
+    required String email, 
+    required String password, 
+    required String userType,
+    required String name,
+  }) async {
     try {
-      // Create user with email and password
-      final UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      // Create user in Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email, 
+        password: password
       );
 
-      // Save user data to Firestore
+      // Store additional user info in Firestore
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
-        'uid': userCredential.user!.uid,
+        'name': name,
         'email': email,
-        'role': role.name,
+        'userType': userType,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      return userCredential;
+      return userCredential.user!.uid;
     } on FirebaseAuthException catch (e) {
-      print("FirebaseAuthException: ${e.code} - ${e.message}");
-      throw e; // Rethrow the exception
-    } catch (e) {
-      print("Error during sign up: $e");
-      throw e; // Rethrow the exception
+      print('Sign Up Error: ${e.message}');
+      return null;
     }
-  
   }
 
-  Future<UserModel?> getUserData() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      try {
-        final userDoc =
-            await _firestore.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          return UserModel.fromJson(userDoc.data()!);
-        }
-      } catch (e) {
-        print("Error fetching user data: $e");
-      }
-    }
-    return null;
-  }
-
-   // Sign In with Email and Password
-  Future<User?> signInWithEmailAndPassword({
-    required String email,
-    required String password,
+  // Login Method
+  Future<String?> login({
+    required String email, 
+    required String password
   }) async {
     try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email, 
+        password: password
       );
 
-      return result.user;
+      // Fetch user type from Firestore
+      DocumentSnapshot userDoc = await _firestore
+        .collection('users')
+        .doc(userCredential.user!.uid)
+        .get();
+
+      return userDoc['userType'];
     } on FirebaseAuthException catch (e) {
-      print('Sign In Error: ${e.message}');
-      return null;
-    } catch (e) {
-      print('Unexpected Error: $e');
+      print('Login Error: ${e.message}');
       return null;
     }
   }
+
+  // Sign Out Method
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  getUserData() {}
 }

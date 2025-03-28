@@ -1,188 +1,257 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shopngo/models/user_model.dart';
-import 'package:shopngo/screens/login_screen.dart';
-import 'package:shopngo/services/auth_service.dart';
-import 'package:shopngo/utils/constants.dart';
-import 'package:shopngo/widgets/custom_input_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shopngo/screens/buyer/home_screen.dart';
+import 'package:shopngo/screens/seller/home_screen.dart';
 
-class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
-
+class SignUpPage extends StatefulWidget {
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignUpPageState extends State<SignUpPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  
+  String _selectedUserType = 'buyer';
   bool _isLoading = false;
-  UserRole _selectedRole = UserRole.user; // Default role
+  String _errorMessage = '';
 
   void _signUp() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      final String email = _emailController.text.trim();
-      final String password = _passwordController.text.trim();
+    // Input Validation
+    if (_nameController.text.trim().isEmpty) {
+      _showError('Please enter your name');
+      return;
+    }
 
-      try {
-        final userCredential = await _authService.signUpWithEmailAndPassword(
-            email, password, _selectedRole);
+    if (_emailController.text.trim().isEmpty || 
+        !_emailController.text.trim().contains('@')) {
+      _showError('Please enter a valid email');
+      return;
+    }
 
-        setState(() {
-          _isLoading = false;
-        });
+    if (_passwordController.text.trim().length < 6) {
+      _showError('Password must be at least 6 characters');
+      return;
+    }
 
-        if (userCredential != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account created successfully!')),
-          );
-          print('User registered: ${userCredential.user?.uid}');
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to create account. Please try again.')),
-          );
-        }
-      } on FirebaseAuthException catch (e) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Firebase Auth Error: ${e.message}')),
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      // Create user in Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(), 
+        password: _passwordController.text.trim()
+      );
+
+      // Explicitly create user document with correct type
+      Map<String, dynamic> userData = {
+        'name': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'userType': _selectedUserType,
+        'createdAt': FieldValue.serverTimestamp(),
+        'uid': userCredential.user!.uid
+      };
+
+      // Store user info in Firestore
+      await _firestore
+        .collection('users')
+        .doc(userCredential.user!.uid)
+        .set(userData);
+
+      // Navigate based on user type
+      if (_selectedUserType == 'buyer') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen())
         );
-      } catch (e) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred: ${e.toString()}')),
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => SellerHomePage())
         );
       }
+    } on FirebaseAuthException catch (e) {
+      // Handle specific Firebase Auth errors
+      String errorMessage = '';
+      switch (e.code) {
+        case 'weak-password':
+          errorMessage = 'The password is too weak.';
+          break;
+        case 'email-already-in-use':
+          errorMessage = 'An account already exists with this email.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        default:
+          errorMessage = 'An error occurred. Please try again.';
+      }
+      
+      _showError(errorMessage);
+    } catch (e) {
+      // Catch any other unexpected errors
+      _showError('An unexpected error occurred: ${e.toString()}');
+      print('Signup Error: $e'); // Add this for more detailed debugging
+    } finally {
+      // Ensure loading state is turned off
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  void _showError(String message) {
+    setState(() {
+      _errorMessage = message;
+      _isLoading = false;
+    });
+
+    // Show snackbar for additional visibility
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      )
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Sign Up'),
-        backgroundColor: kPrimaryColor,
-      ),
-      body: Center(
+      backgroundColor: Color(0xFFFFF2F2),
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  'Create Account',
-                  style: kTitleStyle,
-                  textAlign: TextAlign.center,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 80),
+              Text(
+                'Create an Account',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF2D336B),
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 20),
-                CustomInputField(
-                  hintText: 'Email',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                CustomInputField(
-                  hintText: 'Password',
-                  controller: _passwordController,
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters long';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                CustomInputField(
-                  hintText: 'Confirm Password',
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<UserRole>(
-                  value: _selectedRole,
-                  items: UserRole.values
-                      .map((UserRole role) => DropdownMenuItem<UserRole>(
-                            value: role,
-                            child: Text(role.toString().split('.').last),
-                          ))
-                      .toList(),
-                  onChanged: (UserRole? newValue) {
-                    setState(() {
-                      _selectedRole = newValue!;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Role',
-                    border: OutlineInputBorder(),
+              ),
+              SizedBox(height: 40),
+              // Error Message Display
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    _errorMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _signUp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        )
-                      : const Text(
-                          'Sign Up',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
                 ),
-                const SizedBox(height: 15),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()));
-                  },
-                  child: const Text('Already have an account? Login'),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-              ],
-            ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              // User Type Selection
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: Text('Buyer'),
+                      value: 'buyer',
+                      groupValue: _selectedUserType,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedUserType = value!;
+                        });
+                      },
+                      activeColor: Color(0xFF7886C7),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: Text('Seller'),
+                      value: 'seller',
+                      groupValue: _selectedUserType,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedUserType = value!;
+                        });
+                      },
+                      activeColor: Color(0xFF7886C7),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _signUp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF7886C7),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isLoading 
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+              ),
+            ],
           ),
         ),
       ),

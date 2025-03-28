@@ -1,139 +1,132 @@
-// lib/screens/login_screen.dart
-
-import 'package:shopngo/screens/buyer/home_screen.dart';
-import 'package:shopngo/screens/signup_screen.dart';
-import 'package:shopngo/services/auth_service.dart';
-import 'package:shopngo/utils/constants.dart';
-import 'package:shopngo/widgets/custom_input_field.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shopngo/services/auth_service.dart';
+import 'package:shopngo/screens/buyer/home_screen.dart';
+import 'package:shopngo/screens/seller/home_screen.dart';
+import 'package:shopngo/screens/signup_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
+class LoginPage extends StatefulWidget {
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginPageState extends State<LoginPage> {
+  final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-void _login() async {
-  final String email = _emailController.text.trim();
-  final String password = _passwordController.text.trim();
+  void _login() async {
+    setState(() => _isLoading = true);
 
-  final user = await _authService.signInWithEmailAndPassword(
-    email: email,
-    password: password,
-  );
+    String? userType = await _authService.login(
+      email: _emailController.text.trim(), 
+      password: _passwordController.text.trim()
+    );
 
-  if (user != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login successful!')),
-    );
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login failed. Please try again.')),
-    );
-  }
+    setState(() => _isLoading = false);
+
+    if (userType != null) {
+      // Navigate based on user type
+      if (userType == 'buyer') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen())
+        );
+      } else if (userType == 'seller') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => SellerHomePage())
+        );
+      }
+    } else {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login Failed. Please check your credentials.'))
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Login'),
-        backgroundColor: kPrimaryColor,
-      ),
-      body: Center(
+      backgroundColor: Color(0xFFFFF2F2),
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  'Welcome Back',
-                  style: kTitleStyle,
-                  textAlign: TextAlign.center,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 80),
+              Text(
+                'Welcome Back!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF2D336B),
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 20),
-                CustomInputField(
-                  hintText: 'Email',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                CustomInputField(
-                  hintText: 'Password',
-                  controller: _passwordController,
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+              ),
+              SizedBox(height: 40),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Login',
-                          style: kButtonTextStyle,
-                        ),
                 ),
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Text('Don\'t have an account?'),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignupScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(color: kPrimaryColor),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF7886C7),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isLoading 
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      'Login',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
+              ),
+              SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => SignUpPage())
+                  );
+                },
+                child: Text(
+                  'Don\'t have an account? Sign Up',
+                  style: TextStyle(color: Color(0xFF2D336B)),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

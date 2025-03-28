@@ -20,8 +20,8 @@ class AppRoutes {
   static const String selleradditem = '/selleradditem';
 
   static Map<String, WidgetBuilder> routes = {
-    login: (context) => LoginScreen(),
-    register: (context) => SignupScreen(),
+    login: (context) => LoginPage(),
+    register: (context) => SignUpPage(),
     home: (context) => HomeScreen(),
     profile: (context) => ProfileScreen(),
     category: (context) => CategoriesScreen(),
