@@ -4,9 +4,11 @@ import 'package:shopngo/utils/constants.dart';
 import '../categories_screen.dart';
 import 'profile_screen.dart';
 import '../../widgets/bottom_navigation_bar.dart';
+import '../all_item_screen.dart'; // Adjust the import path as necessary
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+  
 
   // Helper method to build category items
   Widget _buildCategoryItem(IconData icon, String title) {
@@ -168,13 +170,33 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Product Section
-            const Text(
-              'Popular Products',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: kPrimaryColor),
-            ),
+           Container(
+                  alignment: Alignment.centerLeft,
+                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                            "popular products", 
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: kPrimaryColor,),
+                      ),
+                      IconButton(
+                        icon:
+                            Icon(Icons.arrow_forward_ios, color: Colors.black),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AllItemsScreen()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
             const SizedBox(height: 10),
             GridView.builder(
               shrinkWrap: true,
