@@ -1,5 +1,6 @@
 // lib/screens/login_screen.dart
 
+import 'package:shopngo/screens/buyer/home_screen.dart';
 import 'package:shopngo/screens/signup_screen.dart';
 import 'package:shopngo/services/auth_service.dart';
 import 'package:shopngo/utils/constants.dart';
@@ -20,55 +21,28 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-  void _login() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        setState(() {
-          _isLoading = true;
-        });
+void _login() async {
+  final String email = _emailController.text.trim();
+  final String password = _passwordController.text.trim();
 
-        final String email = _emailController.text.trim();
-        final String password = _passwordController.text.trim();
+  final user = await _authService.signInWithEmailAndPassword(
+    email: email,
+    password: password,
+  );
 
-        final user =
-            await _authService.signInWithEmailAndPassword(email, password);
-
-        if (!mounted) return;
-
-        // Login successful
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-
-        // Wait for snackbar
-        await Future.delayed(const Duration(seconds: 2));
-
-        if (!mounted) return;
-
-        // Navigate to home screen
-        Navigator.pushReplacementNamed(context, '/home');
-      } catch (e) {
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    }
+  if (user != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Login successful!')),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Login failed. Please try again.')),
+    );
+  }
   }
 
   @override

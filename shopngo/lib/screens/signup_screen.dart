@@ -1,13 +1,13 @@
-// lib/screens/signup_screen.dart
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:shopngo/models/user_model.dart';
 import 'package:shopngo/screens/login_screen.dart';
 import 'package:shopngo/services/auth_service.dart';
 import 'package:shopngo/utils/constants.dart';
 import 'package:shopngo/widgets/custom_input_field.dart';
-import 'package:flutter/material.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  const SignupScreen({Key? key}) : super(key: key);
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -21,86 +21,53 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  UserRole _selectedRole = UserRole.user; // Default role
 
-void _signUp() async {
-  if (_formKey.currentState!.validate()) {
-    try {
+  void _signUp() async {
+    if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
-      
       final String email = _emailController.text.trim();
       final String password = _passwordController.text.trim();
 
-      print('Attempting to sign up with email: $email'); 
+      try {
+        final userCredential = await _authService.signUpWithEmailAndPassword(
+            email, password, _selectedRole);
 
-      final user = await _authService.signUp(
-        email: email,
-        password: password,
-      );
-
-      print('Sign up result: ${user != null ? 'Success' : 'Failed'}'); // Debug print
-
-      if (user != null) {
-        if (!mounted) return; 
-        
-        print('Showing success message'); 
-        
-        // Show success message and prevent it from being dismissed
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('Account created successfully!'),
-              duration: Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        
-        // Wait for snackbar
-        await Future.delayed(const Duration(seconds: 2));
-        
-        if (!mounted) return; // Check mounted again after delay
-        
-        print('Navigating to home'); // Debug print
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        if (!mounted) return;
-        
-        print('Showing failure message'); 
-        ScaffoldMessenger.of(context)
-          ..removeCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('Failed to create account. Please try again.'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-      }
-    } catch (e) {
-      print('Error during sign up: $e'); 
-      
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-    } finally {
-      if (mounted) {
         setState(() {
           _isLoading = false;
         });
+
+        if (userCredential != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account created successfully!')),
+          );
+          print('User registered: ${userCredential.user?.uid}');
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to create account. Please try again.')),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Firebase Auth Error: ${e.message}')),
+        );
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred: ${e.toString()}')),
+        );
       }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -169,43 +136,50 @@ void _signUp() async {
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
+                DropdownButtonFormField<UserRole>(
+                  value: _selectedRole,
+                  items: UserRole.values
+                      .map((UserRole role) => DropdownMenuItem<UserRole>(
+                            value: role,
+                            child: Text(role.toString().split('.').last),
+                          ))
+                      .toList(),
+                  onChanged: (UserRole? newValue) {
+                    setState(() {
+                      _selectedRole = newValue!;
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Role',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _signUp,
+                  onPressed: _signUp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPrimaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
                       : const Text(
                           'Sign Up',
-                          style: kButtonTextStyle,
+                          style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                 ),
                 const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Text('Already have an account?'),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(color: kPrimaryColor),
-                      ),
-                    ),
-                  ],
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()));
+                  },
+                  child: const Text('Already have an account? Login'),
                 ),
               ],
             ),
