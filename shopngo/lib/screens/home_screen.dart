@@ -3,7 +3,7 @@
 import 'package:shopngo/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'categories_screen.dart';
-import 'profile_screen.dart';
+import 'buyer/profile_screen.dart';
 import '../widgets/bottom_navigation_bar.dart';
 
 class HomeScreen extends StatelessWidget {

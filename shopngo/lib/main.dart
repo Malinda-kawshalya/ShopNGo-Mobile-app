@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'services/route_service.dart';
-import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,11 +24,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
- initialRoute: '/loading', // Set initial route to loading page
-      routes: {
-        '/loading': (context) => HomeScreen(), // Define loading page route
-        ...AppRoutes.routes,     
-  },
+      initialRoute: '/home', // Set initial route to loading page
+      routes: { ...AppRoutes.routes },
+          
     );
   }
 }
