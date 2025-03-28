@@ -2,9 +2,29 @@
 
 import 'package:shopngo/utils/constants.dart';
 import 'package:flutter/material.dart';
+import '../widgets/bottom_navigation_bar.dart';
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
+
+  void _navigateToPage(BuildContext context, int index) {
+    String routeName = '';
+
+     if (index == 0) {
+      routeName = '/home';
+    } else if (index == 1) {
+      routeName = '/category';
+    } else if (index == 2) {
+      routeName = '/wishlist';
+    } else if (index == 3) {
+      routeName = '/cart';
+    } 
+
+
+    if (ModalRoute.of(context)?.settings.name != routeName) {
+      Navigator.pushReplacementNamed(context, routeName);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +114,10 @@ class CategoriesScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: 1,
+        onItemTapped: (index) => _navigateToPage(context, index),
       ),
     );
   }

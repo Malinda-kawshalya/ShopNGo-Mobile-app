@@ -3,7 +3,8 @@
 import 'package:shopngo/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'categories_screen.dart';
-import 'profile_page.dart';
+import 'profile_screen.dart';
+import '../widgets/bottom_navigation_bar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -39,6 +40,24 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _navigateToPage(BuildContext context, int index) {
+    String routeName = '';
+
+    if (index == 0) {
+      routeName = '/home';
+    } else if (index == 1) {
+      routeName = '/category';
+    } else if (index == 2) {
+      routeName = '/wishlist';
+    } else if (index == 3) {
+      routeName = '/cart';
+    } 
+
+    if (ModalRoute.of(context)?.settings.name != routeName) {
+      Navigator.pushReplacementNamed(context, routeName);
+    }
   }
 
   @override
@@ -198,34 +217,14 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // Set initial selected item
-        selectedItemColor: kPrimaryColor,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category),
-            label: 'Categories',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Wishlist',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
-        ],
-        onTap: (index) {
-          // Handle navigation to different screens based on index
-          print('Tapped on item $index');
-        },
-      ),
-    );
+      
+        bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: 0, // Highlight 'Home'
+        onItemTapped: (index) => _navigateToPage(context, index),
+        ),
+    
+        
+      );
+    
   }
 }
