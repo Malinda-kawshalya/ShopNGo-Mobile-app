@@ -1,7 +1,6 @@
 // lib/screens/home_screen.dart
-
-import 'package:shopngo/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:shopngo/utils/constants.dart';
 import '../categories_screen.dart';
 import 'profile_screen.dart';
 import '../../widgets/bottom_navigation_bar.dart';
@@ -53,7 +52,7 @@ class HomeScreen extends StatelessWidget {
       routeName = '/wishlist';
     } else if (index == 3) {
       routeName = '/cart';
-    } 
+    }
 
     if (ModalRoute.of(context)?.settings.name != routeName) {
       Navigator.pushReplacementNamed(context, routeName);
@@ -65,18 +64,29 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
+        shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(35),
+          bottomRight: Radius.circular(35),
+        ),
+      ),
         backgroundColor: kPrimaryColor,
-        title: const Text('E-commerce App'),
+              toolbarHeight: 100,
+
+        title: const Text(
+          "ShopNgo",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+            ),
+        ),
         actions: [
+          
           IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              // Navigate to the cart screen
-              print('Cart button pressed');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.person),
+            icon: const Icon(Icons.person,
+            color: Colors.black, size: 30),
+
             onPressed: () {
               // Navigate to the profile screen
               Navigator.of(context).push(MaterialPageRoute(
@@ -90,6 +100,30 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            // Search Bar
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  prefixIcon: const Icon(Icons.search, color: kPrimaryColor),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+                onSubmitted: (value) {
+                  // Handle search query here (e.g., navigate to a search results page)
+                  print('Search query: $value');
+                  // Example: Navigator.pushNamed(context, '/search', arguments: value);
+                },
+              ),
+            ),
+
             // Banner/Featured Section
             Container(
               height: 150,
@@ -144,15 +178,14 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 10),
             GridView.builder(
               shrinkWrap: true,
-              physics:
-                  const NeverScrollableScrollPhysics(), // To disable GridView scrolling within SingleChildScrollView
+              physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // Two items per row
+                crossAxisCount: 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 0.7, // Adjust aspect ratio as needed
+                childAspectRatio: 0.7,
               ),
-              itemCount: 6, // Example number of products
+              itemCount: 6,
               itemBuilder: (context, index) {
                 return Container(
                   decoration: BoxDecoration(
@@ -170,7 +203,6 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Product Image
                       Expanded(
                         child: Container(
                           width: double.infinity,
@@ -201,7 +233,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '\$29.99', // Example price
+                              '\$29.99',
                               style: TextStyle(
                                   color: Colors.green[700],
                                   fontWeight: FontWeight.bold),
@@ -217,14 +249,10 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      
-        bottomNavigationBar: CustomBottomNavBar(
+      bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: 0, // Highlight 'Home'
         onItemTapped: (index) => _navigateToPage(context, index),
-        ),
-    
-        
-      );
-    
+      ),
+    );
   }
 }
