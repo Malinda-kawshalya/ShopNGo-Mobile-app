@@ -1,14 +1,21 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shopngo/utils/constants.dart';
 import '../categories_screen.dart';
 import 'profile_screen.dart';
 import '../../widgets/bottom_navigation_bar.dart';
-import '../all_item_screen.dart'; // Adjust the import path as necessary
+import '../all_item_screen.dart';
+import '../wishlist_screen.dart';
+import '../cart_screen.dart'; // Import your cart screen
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-  
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
 
   // Helper method to build category items
   Widget _buildCategoryItem(IconData icon, String title) {
@@ -43,21 +50,33 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToPage(BuildContext context, int index) {
-    String routeName = '';
+  void _navigateToPage(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
 
-    if (index == 0) {
-      routeName = '/home';
-    } else if (index == 1) {
-      routeName = '/category';
-    } else if (index == 2) {
-      routeName = '/wishlist';
-    } else if (index == 3) {
-      routeName = '/cart';
-    }
-
-    if (ModalRoute.of(context)?.settings.name != routeName) {
-      Navigator.pushReplacementNamed(context, routeName);
+    switch (index) {
+      case 0:
+        // Home - Keep the current content
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CategoriesScreen()),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => WishlistScreen()),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CartScreen()),
+        );
+        break;
     }
   }
 
@@ -67,28 +86,24 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
         shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(35),
-          bottomRight: Radius.circular(35),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(35),
+            bottomRight: Radius.circular(35),
+          ),
         ),
-      ),
         backgroundColor: kPrimaryColor,
-              toolbarHeight: 100,
-
+        toolbarHeight: 100,
         title: const Text(
           "ShopNgo",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
-          
           IconButton(
-            icon: const Icon(Icons.person,
-            color: Colors.black, size: 30),
-
+            icon: const Icon(Icons.person, color: Colors.black, size: 30),
             onPressed: () {
               // Navigate to the profile screen
               Navigator.of(context).push(MaterialPageRoute(
@@ -170,33 +185,33 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Product Section
-           Container(
-                  alignment: Alignment.centerLeft,
-                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                            "popular products", 
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: kPrimaryColor,),
-                      ),
-                      IconButton(
-                        icon:
-                            Icon(Icons.arrow_forward_ios, color: Colors.black),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AllItemsScreen()),
-                          );
-                        },
-                      ),
-                    ],
+            Container(
+              alignment: Alignment.centerLeft,
+              margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "popular products",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: kPrimaryColor,
+                    ),
                   ),
-                ),
+                  IconButton(
+                    icon: Icon(Icons.arrow_forward_ios, color: Colors.black),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AllItemsScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 10),
             GridView.builder(
               shrinkWrap: true,
@@ -272,8 +287,8 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: 0, // Highlight 'Home'
-        onItemTapped: (index) => _navigateToPage(context, index),
+        selectedIndex: _selectedIndex, // Highlight the active tab
+        onItemTapped: _navigateToPage,
       ),
     );
   }

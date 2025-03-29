@@ -18,6 +18,7 @@ class AppRoutes {
   static const String cart = '/cart';
   static const String sellerhome = '/sellerhome';
   static const String selleradditem = '/selleradditem';
+ 
 
   static Map<String, WidgetBuilder> routes = {
     login: (context) => LoginPage(),

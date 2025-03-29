@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shopngo/utils/constants.dart';
 
-
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex; // Tracks the current selected index
   final Function(int) onItemTapped; // Callback for navigation
@@ -36,8 +35,8 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-         selectedItemColor: kPrimaryColor,
-        unselectedItemColor: Colors.grey,
+          selectedItemColor: kPrimaryColor,
+          unselectedItemColor: Colors.grey,
           backgroundColor: Colors.white,
           showUnselectedLabels: true,
           currentIndex: selectedIndex, // Highlight the active tab
@@ -54,13 +53,13 @@ class CustomBottomNavBar extends StatelessWidget {
               label: 'Category',
             ),
             BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Wishlist',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
+              icon: Icon(Icons.favorite),
+              label: 'Wishlist',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart),
+              label: 'Cart',
+            ),
           ],
         ),
       ),
